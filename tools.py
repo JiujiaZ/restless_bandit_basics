@@ -33,7 +33,7 @@ def noisy_transitions(transition, sigma):
         epsilon = np.random.normal(loc=0.0, scale=sigma, size=n_states**2)
         epsilon = epsilon.reshape((n_states, n_states))
 
-        transition[a] = (transition[a] + epsilon).abs() # prevent negative
+        transition[a] = abs(transition[a] + epsilon) # prevent negative
         transition[a] /= transition.sum(axis = 1, keepdims=True)
 
     return transition
