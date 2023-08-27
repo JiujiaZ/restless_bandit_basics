@@ -1,12 +1,13 @@
 import numpy as np
+from policies import whittle_index
 
-
-def WI_train(rb, episode=100, K=1):
+def WI_train(rb, R, episode=100, K=1):
     """
     train with a whittle indexing, assume transition dynamics stays the same
 
         @param rb:          an instance of restless_bandit
         @param episode:     episode number
+        @param R:           reward for each states
 
         @return rewards:    a list of rewards
     """
@@ -18,7 +19,7 @@ def WI_train(rb, episode=100, K=1):
     WI = np.zeros((n_arms, n_states))
     for n in range(n_arms):
         for s in range(n_states):
-            WI[n, s] = whittle_index(rb.transitions[n], s, R, gamma=0.99, lb=-1, ub=1, subsidy_break=-1)
+            WI[n, s] = whittle_index(rb.transitions[n], s, R = R, gamma=0.99, lb=-1, ub=1, subsidy_break=-1)
 
     for e in range(episode):
         # rank preferred arm from high to low
