@@ -34,7 +34,7 @@ def noisy_transitions(transition, sigma):
         epsilon = epsilon.reshape((n_states, n_states))
 
         transition[a] = abs(transition[a] + epsilon) # prevent negative
-        transition[a] /= transition.sum(axis = 1, keepdims=True)
+        transition[a] /= transition[a].sum(axis = 1, keepdims=True)
 
     return transition
 
