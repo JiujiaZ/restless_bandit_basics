@@ -76,3 +76,4 @@ def whittle_index(transitions, state, R, gamma, lb, ub, subsidy_break, epsilon=1
 
     subsidy = (ub + lb) / 2
     return subsidy
+

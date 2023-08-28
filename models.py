@@ -55,6 +55,10 @@ class State_Space_Model:
     def get_current_states(self):
         return self.current_states
 
+    def reset(self):
+        self.current_states = self.initial_states
+
+
 class Restless_Bandit(State_Space_Model):
 
     """
@@ -105,3 +109,9 @@ class Restless_Bandit(State_Space_Model):
 
         current_state_indx = self.current_states.argmax(axis = 1)
         self.current_reward = (self.R[current_state_indx] * actions).sum()
+
+
+    def reset(self):
+        self.current_reward = 0
+        for arm in self.arms:
+            arm.reset()

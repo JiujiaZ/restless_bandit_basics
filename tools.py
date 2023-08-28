@@ -28,13 +28,14 @@ def noisy_transitions(transition, sigma):
     """
 
     n_actions, n_states = transition.shape[:-1]
+    perturbed_transition = np.zeros_like(transition)
 
     for a in range(n_actions):
         epsilon = np.random.normal(loc=0.0, scale=sigma, size=n_states**2)
         epsilon = epsilon.reshape((n_states, n_states))
 
-        transition[a] = abs(transition[a] + epsilon) # prevent negative
-        transition[a] /= transition[a].sum(axis = 1, keepdims=True)
+        perturbed_transition[a] = abs(transition[a] + epsilon) # prevent negative
+        perturbed_transition[a] /= perturbed_transition[a].sum(axis = 1, keepdims=True)
 
     return transition
 
