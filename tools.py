@@ -37,7 +37,7 @@ def noisy_transitions(transition, sigma):
         perturbed_transition[a] = abs(transition[a] + epsilon) # prevent negative
         perturbed_transition[a] /= perturbed_transition[a].sum(axis = 1, keepdims=True)
 
-    return transition
+    return perturbed_transition
 
 
 
