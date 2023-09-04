@@ -1,4 +1,8 @@
 import numpy as np
+import gurobipy as gb
+from gurobipy import GRB
+
+
 def value_iteration(transitions, R, lamb_val, gamma, epsilon=1e-2):
 
     """
@@ -76,4 +80,102 @@ def whittle_index(transitions, state, R, gamma, lb, ub, subsidy_break, epsilon=1
 
     subsidy = (ub + lb) / 2
     return subsidy
+
+def est_confidence(counts, n_arms, t =1, delta = 1e-3):
+    """
+    confindence ball at time t for a single arm
+
+    @param counts: N[a, s, s']
+    @param delta: positive
+
+    @return diam:    diam[s,a]
+    """
+    n_actions, n_states = counts.shape[:-1]
+
+    # emperical transitions p[a, s, s']
+    est_transition = counts / counts.sum(axis = -1)
+
+    # confidentce radius d[s, a]
+    diam = ((2 * n_states * np.log(2 * n_states * n_actions * n_arms * t**4 / delta ) ) / np.maximum(1, counts.sum(axis = -1) )) ** 0.5
+
+    return est_transition, diam
+
+def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
+
+
+    est_p, diam = est_confidence(counts, n_arms, t = t, delta = delta)
+
+    n_actions, n_states = est_p.shape[:-1]
+
+    model = gb.Model('UCWhittle')
+
+    # variable for value functions
+    value_sa = [[model.addVar(vtype=GRB.CONTINUOUS, name=f'v_{s}_{a}')
+                 for a in range(n_actions)] for s in range(n_states)]
+    value_s = [model.addVar(vtype=GRB.CONTINUOUS, name=f'v_{s}')
+               for s in range(n_states)]
+
+    # dummy variables for confidence interval d_a_s_s':
+    d = [[[model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=diam[s, a],
+                        name=f'd_{a}_{s}_{s_prime}'
+                        ) for s_prime in range(n_states)]
+          for s in range(n_states)]
+         for a in range(n_actions)]
+
+    # p_a_s_s':
+    p = [[[model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1,
+                        name=f'p_{a}_{s}_{s_prime}'
+                        ) for s_prime in range(n_states)]
+          for s in range(n_states)]
+         for a in range(n_actions)]
+
+    # define constraints -------------------------------------------------------
+    for a in range(n_actions):
+        for s in range(n_states):
+
+            for s_prime in range(n_states):
+                model.addConstr(p[a][s][s_prime] <= est_p[a, s, s_prime] + d[a][s][s_prime])
+                model.addConstr(p[a][s][s_prime] >= est_p[a, s, s_prime] - d[a][s][s_prime])
+                model.addConstr(d[a][s][s_prime] <= est_p[a, s, s_prime])
+                model.addConstr(d[a][s][s_prime] <= 1 - est_p[a, s, s_prime])
+
+            # 1 norm constrant
+            model.addConstr(sum(d[a][s]) <= diam[s, a])
+            # probability sums up to 1
+            model.addConstr(sum(p[a][s]) == 1)
+            # q function q(s,a)
+            model.addConstr(value_sa[s][a] == -subsidy * a + R[s]
+                            + gamma * sum(list(map(lambda x, y: x * y, value_s, p[a][s])))
+                            )
+
+            # value function v(s):
+            if a == 0:
+                model.addConstr(value_s[s] == gb.max_(value_sa[s]))
+
+    # set objective:
+    model.setObjective(value_s[s0], GRB.MAXIMIZE)
+
+    # grb model parameters:
+    model.write('UCWhittle.lp')
+    model.setParam('NonConvex', 2)  # nonconvex constraints
+    # model.setParam('DualReductions', 1)
+    max_iterations = 10000
+    model.setParam('IterationLimit', max_iterations)
+
+    # optimize
+    model.optimize()
+
+    # get est_p
+    new_p = np.zeros_like(est_p)
+
+    for a in range(n_actions):
+        for s in range(n_states):
+            for s_prime in range(n_states):
+                new_p[a, s, s_prime] = p[a][s][s_prime].X
+
+    return new_p
+
+
+
+
 
