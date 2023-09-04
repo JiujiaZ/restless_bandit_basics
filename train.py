@@ -91,7 +91,7 @@ def UCW_train(rb, R, H = 20, episode=100, K=1):
 
             s0 = rb.initial_states[n].argmax()
 
-            est_P = uc_whittle(s0, subsidy, R = R, gamma = 0.99, counts = counts, n_arms = n_arms, t = e+1, delta = 1e-3)
+            est_P = uc_whittle(s0, subsidy, R = R, gamma = 0.99, counts = counts[n], n_arms = n_arms, t = e+1, delta = 1e-3)
 
             for s in range(n_states):
                 WI[n, s] = whittle_index(est_P, s, R=R, gamma=0.99, lb=-10, ub=10, subsidy_break=-1)
@@ -118,5 +118,7 @@ def UCW_train(rb, R, H = 20, episode=100, K=1):
                 counts[n, current_states[n].argmax(), next_states[n].argmax()] += 1
 
             subsidy = WI[current_states[indx[-1]]]
+
+            print(f' h = {h}, subsidy = {subsidy}')
 
     return rewards

@@ -173,6 +173,9 @@ def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
             for s_prime in range(n_states):
                 new_p[a, s, s_prime] = p[a][s][s_prime].X
 
+    if model.status != GRB.OPTIMAL:
+        print('not optimal solution')
+
     return new_p
 
 
