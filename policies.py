@@ -93,10 +93,20 @@ def est_confidence(counts, n_arms, t =1, delta = 1e-3):
     n_actions, n_states = counts.shape[:-1]
 
     # emperical transitions p[a, s, s']
-    est_transition = counts / counts.sum(axis = -1)
+    N_a_s = counts.sum(axis = -1)
+
+    never_observed = np.where(N_a_s == 0)
+    observed = np.where(N_a_s > 0)
+
+    est_transition = np.zeros_like(counts)
+
+    for a, s in zip(*never_observed):
+        est_transition[a, s, :] = 1 / n_states
+    for a, s in zip(*observed):
+        est_transition[a, s, :] = counts[a, s, :] / N_a_s[a, s]
 
     # confidentce radius d[s, a]
-    diam = ((2 * n_states * np.log(2 * n_states * n_actions * n_arms * t**4 / delta ) ) / np.maximum(1, counts.sum(axis = -1) )) ** 0.5
+    diam = ((2 * n_states * np.log(2 * n_states * n_actions * n_arms * t**4 / delta ) ) / np.maximum(1, N_a_s )) ** 0.5
 
     return est_transition, diam
 
