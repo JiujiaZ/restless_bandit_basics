@@ -173,12 +173,6 @@ def Exp3_train(rb, R, episode=100, K=1):
         # p = p/p.sum()
         p = logsumexp_trick(eta * cum_reward)
 
-        print(e, p)
-
-        if np.isnan(p).any():
-            print('check')
-        # print(p)
-
     return rewards
 
 
