@@ -1,5 +1,5 @@
 import numpy as np
-from policies import whittle_index, uc_whittle
+from policies import whittle_index
 from tools import *
 import copy
 
