@@ -1,6 +1,6 @@
 import numpy as np
 from policies import whittle_index, uc_whittle
-from tools import random_features
+from tools import random_features, logsumexp_trick
 import copy
 
 def WI_train(rb, R, transitions = None, episode=100, K=1):
@@ -151,6 +151,7 @@ def Exp3_train(rb, R, episode=100, K=1):
 
     for e in range(episode):
 
+        print(e, p)
         # sample arms
         indx = np.random.choice(n_arms, size=K, replace=False, p = p)
 
@@ -167,9 +168,15 @@ def Exp3_train(rb, R, episode=100, K=1):
 
         # exp3 update:
         cum_reward += R_hat
-        p = np.exp(eta * cum_reward)
-        p = p/p.sum()
+        # avoid over flow use log-sum-exp trick
+        # p = np.exp(eta * cum_reward)
+        # p = p/p.sum()
+        p = logsumexp_trick(eta * cum_reward)
 
+        print(e, p)
+
+        if np.isnan(p).any():
+            print('check')
         # print(p)
 
     return rewards

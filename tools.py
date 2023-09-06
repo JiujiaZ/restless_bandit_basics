@@ -96,3 +96,15 @@ def random_features(n_arms, n_dims, scale = 1):
     return feature
 
 
+def logsumexp_trick(x):
+    """
+    For exp(x_i) / sum_i exp(x_i) avioding over flow
+    """
+
+    c = x.max()
+    y = c + np.log( np.sum(np.exp(x-c) ) )
+
+    return np.exp(x - y)
+
+
+
