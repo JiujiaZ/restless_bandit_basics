@@ -41,7 +41,7 @@ def WI_train(rb, R, transitions = None, episode=100, K=1):
     return rewards
 
 
-def random_train(rb, episode=100, K=1):
+def random_train(rb, episode=100, K=1, contextual = False,  n_dims = 10):
     """
     train with random selection
 
@@ -54,15 +54,37 @@ def random_train(rb, episode=100, K=1):
     n_arms, n_actions, n_states = rb.transitions.shape[:-1]
     rewards = list()
 
+    if contextual: theta_star = random_features(n_dims, 1)
+
     for e in range(episode):
-        # rank preferred arm from high to low
+
         indx = np.random.choice(n_arms, size=K, replace=False)
 
         actions = np.zeros(n_arms, dtype=int)
         actions[indx] = 1
 
         rb.step(actions=actions)
-        rewards.append(rb.current_reward)
+
+
+        if contextual:
+            # get random feature
+            X = random_features(n_arms, n_dims - 1, scale=1 / np.sqrt(2))
+            # attach states
+            if e == 0:
+                prev_observed_states = rb.current_states.argmax(axis=-1, keepdims=True)
+            else:
+                prev_observed_states = np.ones((n_arms, 1)) * 0.5
+                prev_observed_states[indx] = rb.current_states.argmax(axis=-1, keepdims=True)[indx]
+            X = np.hstack((prev_observed_states / 2 , X))
+
+            # X = np.hstack((rb.current_states.argmax(axis=-1, keepdims=True) * 1 / 2, X))
+            # X = X[:, :, np.newaxis]
+
+            reward = (X[indx] @ theta_star).item() + np.random.normal(scale = 1e-1)
+        else:
+            reward = rb.current_reward
+
+        rewards.append(reward)
 
     return rewards
 
@@ -149,7 +171,7 @@ def Exp3_train(rb, R, episode=100, K=1, contextual = False, n_dims = 10):
     # optimal learning rate:
     eta = np.sqrt( 2 * np.log( n_arms ) / (episode * n_arms) )
 
-    if contextual: theta_star = gaussian_features(n_dims, 1)
+    if contextual: theta_star = random_features(n_dims, 1)
 
     for e in range(episode):
 
@@ -272,10 +294,10 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10, common = True):
 
     # needs to be implemented in model
     if common:
-        theta_star = gaussian_features(1, n_dims)
+        theta_star = random_features(1, n_dims)
         theta_star = np.tile(theta_star.squeeze(), (n_arms, 1) ) #[n, n_dims]
     else:
-        theta_star = gaussian_features(n_arms, n_dims)
+        theta_star = random_features(n_arms, n_dims)
 
     theta_star = theta_star[:,:,np.newaxis]
 
@@ -335,6 +357,8 @@ def RoLinUCB(rb, episode=100, K=1, n_dims = 10, sigma_0 = 1e-1, sigma = 1e-1, la
 
     n_arms, n_actions, n_states = rb.transitions.shape[:-1]
     rewards = list()
+
+
 
 
 
