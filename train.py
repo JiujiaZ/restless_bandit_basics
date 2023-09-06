@@ -149,7 +149,7 @@ def Exp3_train(rb, R, episode=100, K=1, contextual = False, n_dims = 10):
     # optimal learning rate:
     eta = np.sqrt( 2 * np.log( n_arms ) / (episode * n_arms) )
 
-    if contextual: theta_star = random_features(n_dims, 1)
+    if contextual: theta_star = gaussian_features(n_dims, 1)
 
     for e in range(episode):
 
@@ -272,10 +272,10 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10, common = True):
 
     # needs to be implemented in model
     if common:
-        theta_star = random_features(1, n_dims)
+        theta_star = gaussian_features(1, n_dims)
         theta_star = np.tile(theta_star.squeeze(), (n_arms, 1) ) #[n, n_dims]
     else:
-        theta_star = random_features(n_arms, n_dims)
+        theta_star = gaussian_features(n_arms, n_dims)
 
     theta_star = theta_star[:,:,np.newaxis]
 
