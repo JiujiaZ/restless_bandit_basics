@@ -129,7 +129,7 @@ def UCW_train(rb, R, H = 20, episode=100, K=1):
     return rewards
 
 
-def Exp3_train(rb, R, episode=100, K=1):
+def Exp3_train(rb, R, episode=100, K=1, contextual = False, n_dims = 10):
     """
     EXP3 algorithm for bandit (maximize reward)
 
@@ -149,6 +149,8 @@ def Exp3_train(rb, R, episode=100, K=1):
     # optimal learning rate:
     eta = np.sqrt( 2 * np.log( n_arms ) / (episode * n_arms) )
 
+    if contextual: theta_star = random_features(n_dims, 1)
+
     for e in range(episode):
 
         # sample arms
@@ -158,12 +160,26 @@ def Exp3_train(rb, R, episode=100, K=1):
         actions[indx] = 1
 
         rb.step(actions=actions)
-        rewards.append(rb.current_reward)
+
+        if contextual:
+            # get random feature
+            X = random_features(n_arms, n_dims - 1, scale=1 / np.sqrt(2))
+            # attach states
+            X = np.hstack((rb.current_states.argmax(axis=-1, keepdims=True) * 1 / 2, X))
+            # X = X[:, :, np.newaxis]
+
+            reward = (X[indx] @ theta_star).item()
+        else:
+            reward = rb.current_reward
+
+        rewards.append(reward)
 
         # adjusted reward
         R_hat = np.zeros(n_arms)
         observed_states = rb.current_states[indx].argmax(axis = -1)
-        R_hat[indx] = R[observed_states] / p[indx]
+        R_hat[indx] = reward / p[indx]
+        # R_hat[indx] = R[observed_states] / p[indx]
+
 
         # exp3 update:
         cum_reward += R_hat
@@ -196,6 +212,7 @@ def UCB(rb, R, episode=100, K=1):
 
     # alpha > 2
     alpha = 3
+
 
     for e in range(episode):
 
@@ -254,7 +271,6 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
         # attach states
         X = np.hstack((rb.current_states.argmax(axis = -1, keepdims = True) * 1/2, X))
         X = X[:, :, np.newaxis]
-        print(X.shape)
 
         # estimation
         theta = np.zeros((n_arms, n_dims, 1))
