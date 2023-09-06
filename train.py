@@ -165,7 +165,14 @@ def Exp3_train(rb, R, episode=100, K=1, contextual = False, n_dims = 10):
             # get random feature
             X = random_features(n_arms, n_dims - 1, scale=1 / np.sqrt(2))
             # attach states
-            X = np.hstack((rb.current_states.argmax(axis=-1, keepdims=True) * 1 / 2, X))
+            if e == 0:
+                prev_observed_states = rb.current_states.argmax(axis=-1, keepdims=True)
+            else:
+                prev_observed_states = np.ones((n_arms, 1)) * - 1
+                prev_observed_states[indx] = rb.current_states.argmax(axis=-1, keepdims=True)[indx]
+            X = np.hstack((prev_observed_states / 2 , X))
+
+            # X = np.hstack((rb.current_states.argmax(axis=-1, keepdims=True) * 1 / 2, X))
             # X = X[:, :, np.newaxis]
 
             reward = (X[indx] @ theta_star).item() + np.random.normal(scale = 1e-1)
@@ -269,7 +276,14 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
         # get random feature
         X = random_features(n_arms, n_dims-1, scale = 1/np.sqrt(2))
         # attach states
-        X = np.hstack((rb.current_states.argmax(axis = -1, keepdims = True) * 1/2, X))
+        if e == 0:
+            prev_observed_states = rb.current_states.argmax(axis=-1, keepdims=True)
+        else:
+            prev_observed_states = np.ones((n_arms, 1)) * - 1
+            prev_observed_states[indx] = rb.current_states.argmax(axis=-1, keepdims=True)[indx]
+        X = np.hstack((prev_observed_states / 2 , X))
+
+        # X = np.hstack((rb.current_states.argmax(axis = -1, keepdims = True) * 1/2, X))
         X = X[:, :, np.newaxis]
 
         # estimation
@@ -296,6 +310,15 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
 
     return rewards
 
+def LEADER():
+    """
+    https://arxiv.org/pdf/2104.03781.pdf
+    representation selection
+
+    @return:
+    """
+
+    raise NotImplemented
 
 
 
