@@ -77,9 +77,28 @@ def noisy_transitions(transition, sigma):
 
     return perturbed_transition
 
-def random_features(n_arms, n_dims, scale = 1, sigma = 1e-1):
+
+def uniform_features(n_arms, n_dims, scale = 1):
     """
-    generate random features per arm for linear contextual bandit
+    generate random features U[0,1] per arm for linear contextual bandit
+
+    @param n_arms: number of arms
+    @param n_dims: feature dimension per arm
+    @param scale:  maximum L2 norm bound
+
+    @return feature
+
+    """
+    feature = np.random.rand(n_arms, n_dims)
+    if np.linalg.norm(feature) > scale :
+        feature = feature / ( np.linalg.norm(feature) * scale )
+
+    return feature
+
+
+def gaussian_features(n_arms, n_dims, scale = 1, sigma = 1e-1):
+    """
+    generate gaussian features per arm for linear contextual bandit
 
     @param n_arms: number of arms
     @param n_dims: feature dimension per arm
