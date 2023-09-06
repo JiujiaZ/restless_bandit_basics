@@ -118,8 +118,6 @@ class contextual_LinUCB():
         actions[indx] = 1
 
         self.rb.step(actions=actions)
-
-        print(X[indx].shape, self.theta_star.shape)
         self.reward = (X[indx].T @ self.theta_star).item() + np.random.normal(scale=1e-1)
 
         # update:
