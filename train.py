@@ -168,7 +168,7 @@ def Exp3_train(rb, R, episode=100, K=1, contextual = False, n_dims = 10):
             if e == 0:
                 prev_observed_states = rb.current_states.argmax(axis=-1, keepdims=True)
             else:
-                prev_observed_states = np.ones((n_arms, 1)) * - 1
+                prev_observed_states = np.ones((n_arms, 1)) * 0.5
                 prev_observed_states[indx] = rb.current_states.argmax(axis=-1, keepdims=True)[indx]
             X = np.hstack((prev_observed_states / 2 , X))
 
@@ -279,7 +279,7 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
         if e == 0:
             prev_observed_states = rb.current_states.argmax(axis=-1, keepdims=True)
         else:
-            prev_observed_states = np.ones((n_arms, 1)) * - 1
+            prev_observed_states = np.ones((n_arms, 1)) * 0.5
             prev_observed_states[indx] = rb.current_states.argmax(axis=-1, keepdims=True)[indx]
         X = np.hstack((prev_observed_states / 2 , X))
 
