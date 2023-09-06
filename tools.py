@@ -78,7 +78,7 @@ def noisy_transitions(transition, sigma):
     return perturbed_transition
 
 
-def uniform_features(n_arms, n_dims, scale = 1):
+def random_features(n_arms, n_dims, scale = 1):
     """
     generate random features U[0,1] per arm for linear contextual bandit
 

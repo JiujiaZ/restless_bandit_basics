@@ -1,6 +1,6 @@
 import numpy as np
 from policies import whittle_index, uc_whittle
-from tools import random_features, logsumexp_trick
+from tools import *
 import copy
 
 def WI_train(rb, R, transitions = None, episode=100, K=1):
