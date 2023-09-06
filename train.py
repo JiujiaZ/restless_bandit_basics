@@ -245,7 +245,7 @@ def UCB(rb, R, episode=100, K=1):
     return rewards
 
 
-def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
+def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10, common = True):
     """
     LinUCB (disjoint) algorithm for bandit (maximize reward) for a single arm
     Currently support random features
@@ -253,6 +253,7 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
         @param rb:          an instance of restless_bandit
         @param episode:     episode number
         @param n_dims:      random feature dimension
+        @param common:      (bool) true: optimal weights same for each arm
 
         @return rewards:    a list of rewards
     """
@@ -270,7 +271,13 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
     b = np.zeros((n_arms, n_dims, 1))
 
     # needs to be implemented in model
-    theta_star = random_features(n_dims, 1)
+    if common:
+        theta_star = random_features(1, n_dims)
+        theta_star = np.tile(theta_star.squeeze(), (n_arms, 1) ) #[n, n_dims]
+    else:
+        theta_star = random_features(n_arms, n_dims)
+
+    theta_star = theta_star[:,:,np.newaxis]
 
     for e in range(episode):
         # get random feature
@@ -301,7 +308,7 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
 
         rb.step(actions=actions)
         # need to integrate this to model:
-        current_reward = (X[indx].T @ theta_star).item() + np.random.normal(scale = 1e-1)
+        current_reward = (X[indx].T @ theta_star[indx]).item() + np.random.normal(scale = 1e-1)
         rewards.append(current_reward)
 
         # update:
@@ -309,6 +316,37 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
         b[indx] += current_reward * X[indx]
 
     return rewards
+
+def RoLinUCB(rb, episode=100, K=1, n_dims = 10, sigma_0 = 1e-1, sigma = 1e-1, lamb = 1e-1):
+    """
+    https://arxiv.org/pdf/2210.14483.pdf#page5
+
+    @param rb:
+    @param episode:
+    @param K:
+    @param n_dims:
+    @param sigma_0:
+    @param sigma:
+    @param lamb:
+
+    @return:
+    """
+    assert K == 1, 'UCB only valid for pulling a single arm.'
+
+    n_arms, n_actions, n_states = rb.transitions.shape[:-1]
+    rewards = list()
+
+
+
+
+
+
+    return
+
+
+
+
+
 
 def LEADER():
     """
