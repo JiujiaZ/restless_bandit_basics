@@ -151,7 +151,6 @@ def Exp3_train(rb, R, episode=100, K=1):
 
     for e in range(episode):
 
-        print(e, p)
         # sample arms
         indx = np.random.choice(n_arms, size=K, replace=False, p = p)
 
