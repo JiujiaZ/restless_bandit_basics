@@ -168,7 +168,7 @@ def Exp3_train(rb, R, episode=100, K=1, contextual = False, n_dims = 10):
             X = np.hstack((rb.current_states.argmax(axis=-1, keepdims=True) * 1 / 2, X))
             # X = X[:, :, np.newaxis]
 
-            reward = (X[indx] @ theta_star).item()
+            reward = (X[indx] @ theta_star).item() + np.random.normal(scale = 1e-1)
         else:
             reward = rb.current_reward
 
@@ -287,7 +287,7 @@ def LinUCB_disjoint(rb, episode=100, K=1, n_dims = 10):
 
         rb.step(actions=actions)
         # need to integrate this to model:
-        current_reward = (X[indx].T @ theta_star).item()
+        current_reward = (X[indx].T @ theta_star).item() + np.random.normal(scale = 1e-1)
         rewards.append(current_reward)
 
         # update:
