@@ -91,6 +91,7 @@ class Restless_Bandit(State_Space_Model):
         self.current_states = initial_states
         self.current_reward = 0
         self.R = R
+        self.pulled = np.zeros(self.n_arms)
 
 
     def step(self, actions):
@@ -102,10 +103,11 @@ class Restless_Bandit(State_Space_Model):
         """
 
         self.current_states = np.zeros((self.n_arms, self.n_states))
-
+        self.pulled = actions
         for i, (arm, a) in enumerate(zip(self.arms, actions)):
             arm.step(a)
             self.current_states[i,:] = arm.get_current_states()
+
 
         current_state_indx = self.current_states.argmax(axis = 1)
 
