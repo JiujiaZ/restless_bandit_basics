@@ -15,6 +15,44 @@ def random_transitions(n_actions = 2, n_states = 2):
     return transitions
 
 
+def make_valid_transition(transitions):
+    """
+    modify any input transition to  a 'valid' transition
+    assuming 2 state.
+
+    @param transitions: P[a, s, s'], sum_s' = 1
+
+    s: 0 bad state, 1 good state
+
+        1. acting is good
+        2. starting good state more likely to stay good
+   """
+
+    n_actions, n_states = transitions.shape[:-1]
+
+    assert n_actions == 2
+    assert n_states == 2
+
+    # check acting is good, otherwise swap:
+    # (a = 1, s, s' = 1) > (a = 1, s, s' = 0)
+    for s in range(n_states):
+        if transitions[1, s, 1] <= transitions[1, s, 0]:
+            transitions[1, s, 0] = transitions[1, s, 1] * np.random.rand()
+            transitions[1, s, 1] = 1 - transitions[1, s, 0]
+
+    # check starting good is more likely to stay at good state:
+    # (a, s = 1, s' = 1) > (a, s = 0, s' = 1)
+    for a in range(n_actions):
+        if transitions[a, 1, 1] <= transitions[a, 0, 1]:
+            transitions[a, 0, 1] = transitions[a, 1, 1] * np.random.rand()
+            # make sure sums up to 1
+            transitions[a, 0, 0] = 1 - transitions[a, 0, 1]
+
+    assert np.allclose(transitions.sum(axis = -1), 1)
+
+    return transitions
+
+
 def noisy_transitions(transition, sigma):
 
     """
@@ -39,6 +77,22 @@ def noisy_transitions(transition, sigma):
 
     return perturbed_transition
 
+def random_features(n_arms, n_dims, scale = 1):
+    """
+    generate random features per arm for linear contextual bandit
 
+    @param n_arms: number of arms
+    @param n_dims: feature dimension per arm
+    @param scale:  maximum L2 norm bound
+
+    @return feature
+
+    """
+
+    feature = np.random.rand(n_arms, n_dims)
+    if np.linalg.norm(feature) > scale :
+        feature = feature / ( np.linalg.norm(feature) * scale )
+
+    return feature
 
 

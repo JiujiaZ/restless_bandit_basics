@@ -1,6 +1,7 @@
 import numpy as np
 import gurobipy as gb
 from gurobipy import GRB
+import copy
 
 
 def value_iteration(transitions, R, lamb_val, gamma, epsilon=1e-2):
@@ -110,6 +111,7 @@ def est_confidence(counts, n_arms, t =1, delta = 1e-3):
 
     return est_transition, diam
 
+# needs to be fixed, due to the failure of est_P subroutine
 def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
 
 
@@ -126,7 +128,7 @@ def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
                for s in range(n_states)]
 
     # dummy variables for confidence interval d_a_s_s':
-    d = [[[model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=diam[s, a],
+    d = [[[model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub = min(diam[a, s], 1),
                         name=f'd_{a}_{s}_{s_prime}'
                         ) for s_prime in range(n_states)]
           for s in range(n_states)]
@@ -150,7 +152,7 @@ def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
                 model.addConstr(d[a][s][s_prime] <= 1 - est_p[a, s, s_prime])
 
             # 1 norm constrant
-            model.addConstr(sum(d[a][s]) <= diam[s, a])
+            model.addConstr(sum(d[a][s]) <= diam[a, s])
             # probability sums up to 1
             model.addConstr(sum(p[a][s]) == 1)
             # q function q(s,a)
@@ -169,8 +171,9 @@ def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
     model.write('UCWhittle.lp')
     model.setParam('NonConvex', 2)  # nonconvex constraints
     # model.setParam('DualReductions', 1)
-    max_iterations = 10000
+    max_iterations = 100
     model.setParam('IterationLimit', max_iterations)
+    model.Params.LogToConsole = 0
 
     # optimize
     model.optimize()
@@ -178,10 +181,15 @@ def uc_whittle(s0, subsidy, R, gamma, counts, n_arms, t =1, delta = 1e-3):
     # get est_p
     new_p = np.zeros_like(est_p)
 
-    for a in range(n_actions):
-        for s in range(n_states):
-            for s_prime in range(n_states):
-                new_p[a, s, s_prime] = p[a][s][s_prime].X
+    try:
+        # no feasible solution were found
+        for a in range(n_actions):
+            for s in range(n_states):
+                for s_prime in range(n_states):
+                    new_p[a, s, s_prime] = p[a][s][s_prime].X
+    except:
+        print('No feasible solutions')
+        new_p = copy.copy(est_p)
 
     if model.status != GRB.OPTIMAL:
         print('not optimal solution')
